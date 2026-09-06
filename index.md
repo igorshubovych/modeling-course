@@ -14,12 +14,10 @@
 - [Mini Poseidon (Fishery)](./models/mini-poseidon.html)
 
 
-### Copyrights
+## Credits and licenses
 
-#### NetLogo Models Library
+This site contains original and adapted NetLogo models.
 
-Copyright © Uri Wilensky
+Copyright and licensing terms for each model are listed separately.
 
-#### Mini Poseidon Model
-
-https://doi.org/10.1007/s11625-018-0579-9
+See [Credits and licenses](./credits-and-licenses.html).
