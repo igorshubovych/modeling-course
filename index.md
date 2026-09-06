@@ -16,7 +16,7 @@
 
 ### Copyrights
 
-#### NetLogo Library Models
+#### NetLogo Models Library
 
 Copyright © Uri Wilensky
 
