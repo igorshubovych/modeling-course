@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="utf-8"?>
+<model version="NetLogo 7.0.4" snapToGrid="false">
+  <code>breed [fishers fisher]
+patches-own [fish]
+globals [total-fish catch-per-tick catch-per-fisher]
+
+to setup
+  clear-all
+  resize-world 0 29 0 19  ; водойма 30 x 20 клітинок
+  ask patches [set fish random (max-fish-stock + 1)]
+  create-fishers number-of-fishers [
+    move-to one-of patches
+    set shape "person"
+    set color red
+  ]
+  update-metrics
+  update-colors
+  reset-ticks
+end
+
+to go
+  set catch-per-tick 0
+  ask fishers [
+    move-fisher
+    catch-fish
+  ]
+  ask patches [regrowth-fish]
+  update-metrics
+  update-colors
+  tick
+end
+
+; Дії рибалки
+to move-fisher
+  move-to one-of neighbors
+end
+
+to catch-fish
+  let caught round (fish * catch-rate)
+  set fish fish - caught
+  set catch-per-tick catch-per-tick + caught
+end
+
+; Відновлення запасу на клітинці
+to regrowth-fish
+  ; Лінійний варіант: set fish fish + round (regrowth-rate * (max-fish-stock - fish))
+  set fish fish + round (regrowth-rate * fish * (1 - fish / max-fish-stock))
+end
+
+; Показники та візуалізація
+to update-metrics
+  set total-fish sum [fish] of patches
+  ifelse any? fishers
+    [set catch-per-fisher catch-per-tick / count fishers]
+    [set catch-per-fisher 0]
+end
+
+to update-colors
+  ask patches [
+    ; 7 рівнів: від світло-блакитного до темно-синього
+    let level min (list 6 (floor (7 * fish / max-fish-stock)))
+    set pcolor item level [108 107 106 105 104 103 102]
+  ]
+end
+</code>
+  <widgets>
+    <view x="270" wrappingAllowedX="false" y="10" frameRate="15.0" minPycor="0" height="325" showTickCounter="true" patchSize="16.0" fontSize="12" wrappingAllowedY="false" width="485" tickCounterLabel="ticks" maxPycor="19" updateMode="1" maxPxcor="29" minPxcor="0"></view>
+    <slider x="12" step="1" y="69" max="100" display="number-of-fishers" height="37" min="0" direction="Horizontal" default="50.0" variable="number-of-fishers" width="240" sizeVersion="0"></slider>
+    <slider x="12" step="0.005" y="204" max="0.1" display="regrowth-rate" height="37" min="0" direction="Horizontal" default="0.015" variable="regrowth-rate" width="240" sizeVersion="0"></slider>
+    <slider x="10" step="0.01" y="160" max="1" display="catch-rate" height="37" min="0" direction="Horizontal" default="0.15" variable="catch-rate" width="240" sizeVersion="0"></slider>
+    <slider x="12" step="10" y="115" max="200" display="max-fish-stock" height="37" min="10" direction="Horizontal" default="60.0" variable="max-fish-stock" width="240" sizeVersion="0"></slider>
+    <note x="12" y="256" backgroundDark="-822083584" fontSize="13" width="246" markdown="false" height="80" textColorDark="-1" textColorLight="-16777216" backgroundLight="436207616">Темніше — більше риби.
+Світліше — менше риби.
+
+Червоні фігури — рибалки.</note>
+    <button x="174" y="9" height="40" disableUntilTicks="true" forever="false" kind="Observer" width="77" display="go once">go</button>
+    <button x="86" y="9" height="40" disableUntilTicks="true" forever="true" kind="Observer" width="76">go</button>
+    <button x="10" y="9" height="40" disableUntilTicks="false" forever="false" kind="Observer" width="63">setup</button>
+    <plot x="763" autoPlotX="true" yMax="60000.0" autoPlotY="true" yAxis="fish" y="9" xMin="0.0" height="207" legend="false" xMax="100.0" yMin="0.0" xAxis="ticks" display="total-fish" width="388" sizeVersion="0">
+      <setup></setup>
+      <update></update>
+      <pen interval="1.0" mode="0" display="total-fish" color="-13345367" legend="true">
+        <setup></setup>
+        <update>plot total-fish</update>
+      </pen>
+    </plot>
+    <plot x="763" autoPlotX="true" yMax="300.0" autoPlotY="true" yAxis="fish" y="229" xMin="0.0" height="210" legend="false" xMax="100.0" yMin="0.0" xAxis="ticks" display="catch-per-tick" width="389" sizeVersion="0">
+      <setup></setup>
+      <update></update>
+      <pen interval="1.0" mode="0" display="catch-per-tick" color="-2674135" legend="true">
+        <setup></setup>
+        <update>plot catch-per-tick</update>
+      </pen>
+    </plot>
+    <monitor x="507" precision="2" y="353" height="55" fontSize="12" display="catch-per-fisher" width="119" sizeVersion="0">catch-per-fisher</monitor>
+    <monitor x="388" precision="0" y="352" height="55" fontSize="12" display="catch-per-tick" width="110" sizeVersion="0">catch-per-tick</monitor>
+    <monitor x="268" precision="0" y="350" height="55" fontSize="12" display="total-fish" width="107" sizeVersion="0">total-fish</monitor>
+  </widgets>
+  <info>## МОДЕЛЬ ВИЛОВУ РИБИ: ЛОГІСТИЧНЕ ВІДНОВЛЕННЯ
+
+Проста демонстраційна ABM-модель для лекції 2. Рибалки — агенти, запас fish — властивість клітинки. Запас і вилов вимірюються цілою кількістю риб. Середній вилов на рибалку може бути дробовим.
+
+## ЯК ЗАПУСТИТИ
+
+Встановіть параметри, натисніть setup, потім go. Повторне натискання go зупиняє модель. Кнопка go once виконує рівно один такт; використовуйте її, коли безперервний запуск зупинено.
+Поле 30 × 20 задане в коді командою resize-world. Краї закриті (перенесення через край вимкнене в налаштуваннях світу).
+
+number-of-fishers — кількість рибалок; max-fish-stock — місткість клітинки. Після зміни цих параметрів натисніть setup.
+catch-rate та regrowth-rate можна змінювати під час роботи.
+
+## ПРАВИЛА
+
+На початку кожна клітинка має випадковий цілий запас від 0 до max-fish-stock включно.
+Кожен такт рибалки у випадковому порядку переходять на одну з доступних 8 сусідніх клітинок та виловлюють частку поточного запасу: caught = round (fish * catch-rate).
+Кілька рибалок можуть бути на одній клітинці: кожен ловить із запасу, який залишився після попередніх.
+Після дій усіх рибалок запас кожної клітинки відновлюється:
+fish = fish + round (regrowth-rate * fish * (1 - fish / max-fish-stock)).
+Приріст залежить від поточного запасу та вільної місткості. Він найбільший за половини місткості й дорівнює нулю за порожньої або повної клітинки. Порожні клітинки не відновлюються: міграції риби та зариблення немає.
+
+Збережено округлення до найближчого цілого: вилов або приріст менший за 0.5 округлюється до нуля. Тому за малого catch-rate останні риби можуть залишатися невиловленими; сама заміна відновлення не гарантує повного виснаження.
+У коді рибалка безпосередньо читає і змінює fish клітинки, на якій перебуває.
+
+## МЕТРИКИ
+
+total-fish — сумарний запас після відновлення.
+catch-per-tick — сумарний вилов за останній такт.
+catch-per-fisher — середній вилов на одного рибалку за останній такт (0 за відсутності рибалок).
+Палітра має 7 рівнів: мало риби — світло-блакитний, багато — темно-синій. Кожен рівень відповідає приблизно 1/7 місткості клітинки. Червоні фігури — рибалки.
+
+Два графіки показують загальний запас total-fish і сумарний вилов catch-per-tick у часі. Вони оновлюються після кожного такту та очищуються при setup.
+
+
+## СТРУКТУРА КОДУ
+
+setup — початковий стан; go — послідовність одного такту.
+move-fisher та catch-fish виконуються кожним рибалкою.
+regrowth-fish виконується кожною клітинкою після дій усіх рибалок.
+update-metrics обчислює показники; update-colors забарвлює водойму.
+Рефакторинг не змінює правил, округлення або порядку дій моделі.
+</info>
+  <turtleShapes>
+    <shape name="default" rotatable="true" editableColorIndex="0">
+      <polygon color="-1920102913" filled="true" marked="true">
+        <point x="150" y="5"></point>
+        <point x="40" y="250"></point>
+        <point x="150" y="205"></point>
+        <point x="260" y="250"></point>
+      </polygon>
+    </shape>
+    <shape name="person" rotatable="false" editableColorIndex="0">
+      <circle x="110" y="5" marked="true" color="-1920102913" diameter="80" filled="true"></circle>
+      <polygon color="-1920102913" filled="true" marked="true">
+        <point x="105" y="90"></point>
+        <point x="120" y="195"></point>
+        <point x="90" y="285"></point>
+        <point x="105" y="300"></point>
+        <point x="135" y="300"></point>
+        <point x="150" y="225"></point>
+        <point x="165" y="300"></point>
+        <point x="195" y="300"></point>
+        <point x="210" y="285"></point>
+        <point x="180" y="195"></point>
+        <point x="195" y="90"></point>
+      </polygon>
+      <rectangle endX="172" startY="79" marked="true" color="-1920102913" endY="94" startX="127" filled="true"></rectangle>
+      <polygon color="-1920102913" filled="true" marked="true">
+        <point x="195" y="90"></point>
+        <point x="240" y="150"></point>
+        <point x="225" y="180"></point>
+        <point x="165" y="105"></point>
+      </polygon>
+      <polygon color="-1920102913" filled="true" marked="true">
+        <point x="105" y="90"></point>
+        <point x="60" y="150"></point>
+        <point x="75" y="180"></point>
+        <point x="135" y="105"></point>
+      </polygon>
+    </shape>
+  </turtleShapes>
+  <linkShapes>
+    <shape name="default" curviness="0.0">
+      <lines>
+        <line x="-0.2" visible="false">
+          <dash value="0.0"></dash>
+          <dash value="1.0"></dash>
+        </line>
+        <line x="0.0" visible="true">
+          <dash value="1.0"></dash>
+          <dash value="0.0"></dash>
+        </line>
+        <line x="0.2" visible="false">
+          <dash value="0.0"></dash>
+          <dash value="1.0"></dash>
+        </line>
+      </lines>
+      <indicator>
+        <shape name="link direction" rotatable="true" editableColorIndex="0">
+          <line endX="90" startY="150" marked="true" color="-1920102913" endY="180" startX="150"></line>
+          <line endX="210" startY="150" marked="true" color="-1920102913" endY="180" startX="150"></line>
+        </shape>
+      </indicator>
+    </shape>
+  </linkShapes>
+  <previewCommands>setup
+repeat 50 [go]</previewCommands>
+</model>
