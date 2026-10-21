@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="utf-8"?>
+<model version="NetLogo 7.0.4" snapToGrid="false">
+  <code>breed [fishers fisher]
+patches-own [fish]
+globals [total-fish catch-per-tick catch-per-fisher]
+
+to setup
+  clear-all
+  resize-world 0 29 0 19  ; водойма 30 x 20 клітинок
+  ask patches [set fish random-float max-fish-stock]
+  create-fishers number-of-fishers [
+    move-to one-of patches
+    set shape "person"
+    set color red
+  ]
+  update-metrics
+  update-colors
+  reset-ticks
+end
+
+to go
+  set catch-per-tick 0
+  ask fishers [
+    move-fisher
+    catch-fish
+  ]
+  migrate-fish
+  ask patches [regrowth-fish]
+  update-metrics
+  update-colors
+  tick
+end
+
+; Дії рибалки
+to move-fisher
+  move-to one-of neighbors
+end
+
+to catch-fish
+  let caught fish * catch-rate
+  set fish fish - caught
+  set catch-per-tick catch-per-tick + caught
+end
+
+; Рівномірний розподіл риби між поточною та 8 сусідніми клітинками
+to migrate-fish
+  diffuse fish (8 / 9)  ; частки для відсутніх сусідів залишаються на місці
+end
+
+; Відновлення запасу на клітинці
+to regrowth-fish
+  ; Лінійний варіант: set fish fish + regrowth-rate * (max-fish-stock - fish)
+  set fish fish + regrowth-rate * fish * (1 - fish / max-fish-stock)
+end
+
+; Показники та візуалізація
+to update-metrics
+  set total-fish sum [fish] of patches
+  ifelse any? fishers
+    [set catch-per-fisher catch-per-tick / count fishers]
+    [set catch-per-fisher 0]
+end
+
+to update-colors
+  ask patches [
+    ; 7 рівнів: від світло-блакитного до темно-синього
+    let level min (list 6 (floor (7 * fish / max-fish-stock)))
+    set pcolor item level [108 107 106 105 104 103 102]
+  ]
+end
+</code>
+  <widgets>
+    <view x="270" wrappingAllowedX="false" y="10" frameRate="15.0" minPycor="0" height="325" showTickCounter="true" patchSize="16.0" fontSize="12" wrappingAllowedY="false" width="485" tickCounterLabel="ticks" maxPycor="19" updateMode="1" maxPxcor="29" minPxcor="0"></view>
+    <slider x="12" step="1" y="69" max="100" display="number-of-fishers" height="37" min="0" direction="Horizontal" default="11.0" variable="number-of-fishers" width="240" sizeVersion="0"></slider>
+    <slider x="12" step="0.005" y="204" max="0.1" display="regrowth-rate" height="37" min="0" direction="Horizontal" default="0.015" variable="regrowth-rate" width="240" sizeVersion="0"></slider>
+    <slider x="10" step="0.01" y="160" max="1" display="catch-rate" height="37" min="0" direction="Horizontal" default="0.17" variable="catch-rate" width="240" sizeVersion="0"></slider>
+    <slider x="12" step="10" y="115" max="200" display="max-fish-stock" height="37" min="10" direction="Horizontal" default="60.0" variable="max-fish-stock" width="240" sizeVersion="0"></slider>
+    <note x="12" y="256" backgroundDark="-822083584" fontSize="13" width="246" markdown="false" height="80" textColorDark="-1" textColorLight="-16777216" backgroundLight="436207616">Темніше — більше риби.
+Світліше — менше риби.
+
+Червоні фігури — рибалки.</note>
+    <button x="174" y="9" height="40" disableUntilTicks="true" forever="false" kind="Observer" width="77" display="go once">go</button>
+    <button x="86" y="9" height="40" disableUntilTicks="true" forever="true" kind="Observer" width="76">go</button>
+    <button x="10" y="9" height="40" disableUntilTicks="false" forever="false" kind="Observer" width="63">setup</button>
+    <plot x="763" autoPlotX="true" yMax="60000.0" autoPlotY="true" yAxis="fish" y="9" xMin="0.0" height="207" legend="false" xMax="100.0" yMin="0.0" xAxis="ticks" display="total-fish" width="388" sizeVersion="0">
+      <setup></setup>
+      <update></update>
+      <pen interval="1.0" mode="0" display="total-fish" color="-13345367" legend="true">
+        <setup></setup>
+        <update>plot total-fish</update>
+      </pen>
+    </plot>
+    <plot x="763" autoPlotX="true" yMax="300.0" autoPlotY="true" yAxis="fish" y="229" xMin="0.0" height="210" legend="false" xMax="100.0" yMin="0.0" xAxis="ticks" display="catch-per-tick" width="389" sizeVersion="0">
+      <setup></setup>
+      <update></update>
+      <pen interval="1.0" mode="0" display="catch-per-tick" color="-2674135" legend="true">
+        <setup></setup>
+        <update>plot catch-per-tick</update>
+      </pen>
+    </plot>
+    <monitor x="507" precision="2" y="353" height="55" fontSize="12" display="catch-per-fisher" width="119" sizeVersion="0">catch-per-fisher</monitor>
+    <monitor x="388" precision="2" y="352" height="55" fontSize="12" display="catch-per-tick" width="110" sizeVersion="0">catch-per-tick</monitor>
+    <monitor x="268" precision="2" y="350" height="55" fontSize="12" display="total-fish" width="107" sizeVersion="0">total-fish</monitor>
+  </widgets>
+  <info>## ВИЛОВ РИБИ: ДРОБОВИЙ ЗАПАС І РІВНОМІРНА МІГРАЦІЯ
+
+Демонстраційна ABM-модель для лекції. Рибалки — агенти, fish — неперервний запас риби на клітинці (наприклад, біомаса в кілограмах). Запас, вилов і приріст можуть бути дробовими; округлення у формулах немає.
+
+## ЗАПУСК
+
+Поле 30 × 20 задане в setup. Краї закриті.
+Натисніть setup, потім go для безперервного запуску; повторне натискання зупиняє його. Кнопка go once виконує один такт.
+Після зміни number-of-fishers або max-fish-stock натисніть setup. catch-rate та regrowth-rate можна змінювати під час роботи.
+
+## ПОРЯДОК ОДНОГО ТАКТУ
+
+1. Кожен рибалка виконує move-fisher та catch-fish.
+2. migrate-fish рівномірно розподіляє рибу між сусідніми ділянками.
+3. Кожна клітинка виконує regrowth-fish.
+4. update-metrics і update-colors оновлюють показники та кольори; tick оновлює час і графіки.
+
+## ВИЛОВ
+
+Рибалка переходить на випадкову сусідню клітинку та виловлює fish * catch-rate її поточного запасу. Рибалки діють у випадковому порядку; на одній клітинці наступний рибалка ловить із залишку.
+
+## МІГРАЦІЯ
+
+Вбудована команда diffuse fish (8 / 9) одночасно передає по 1/9 запасу кожному з восьми сусідів, залишаючи 1/9 на початковій клітинці. Усередині водойми результат дорівнює середньому запасу поточної клітинки та восьми сусідніх перед міграцією.
+На краях частки для відсутніх сусідів залишаються на початковій клітинці. Тому загальний запас зберігається з точністю обчислень, і риба не виходить за берег. Слайдера або змінного коефіцієнта міграції немає.
+Порожні клітинки можуть заселятися з сусідніх. Якщо порожня вся водойма, відновлення неможливе.
+
+## ЛОГІСТИЧНЕ ВІДНОВЛЕННЯ
+
+Приріст = regrowth-rate * fish * (1 - fish / max-fish-stock).
+Він найбільший за половини місткості, а за нульового або повного запасу дорівнює нулю.
+При вилові частки дробового запасу повне виснаження може бути асимптотичним: запас наближається до нуля, не досягаючи його точно. Автоматичного порогу обнулення немає.
+
+## ПОКАЗНИКИ Й КОЛЬОРИ
+
+total-fish — загальний запас після відновлення.
+catch-per-tick — сумарний вилов за останній такт.
+catch-per-fisher — середній вилов на рибалку (0 за відсутності рибалок).
+Монітори показують два десяткові знаки, але це не округлює внутрішній стан.
+Сім рівнів кольору: мало риби — світло-блакитний, багато — темно-синій. Червоні фігури — рибалки. Два графіки показують загальний запас та вилов за такт.
+</info>
+  <turtleShapes>
+    <shape name="default" rotatable="true" editableColorIndex="0">
+      <polygon color="-1920102913" filled="true" marked="true">
+        <point x="150" y="5"></point>
+        <point x="40" y="250"></point>
+        <point x="150" y="205"></point>
+        <point x="260" y="250"></point>
+      </polygon>
+    </shape>
+    <shape name="person" rotatable="false" editableColorIndex="0">
+      <circle x="110" y="5" marked="true" color="-1920102913" diameter="80" filled="true"></circle>
+      <polygon color="-1920102913" filled="true" marked="true">
+        <point x="105" y="90"></point>
+        <point x="120" y="195"></point>
+        <point x="90" y="285"></point>
+        <point x="105" y="300"></point>
+        <point x="135" y="300"></point>
+        <point x="150" y="225"></point>
+        <point x="165" y="300"></point>
+        <point x="195" y="300"></point>
+        <point x="210" y="285"></point>
+        <point x="180" y="195"></point>
+        <point x="195" y="90"></point>
+      </polygon>
+      <rectangle endX="172" startY="79" marked="true" color="-1920102913" endY="94" startX="127" filled="true"></rectangle>
+      <polygon color="-1920102913" filled="true" marked="true">
+        <point x="195" y="90"></point>
+        <point x="240" y="150"></point>
+        <point x="225" y="180"></point>
+        <point x="165" y="105"></point>
+      </polygon>
+      <polygon color="-1920102913" filled="true" marked="true">
+        <point x="105" y="90"></point>
+        <point x="60" y="150"></point>
+        <point x="75" y="180"></point>
+        <point x="135" y="105"></point>
+      </polygon>
+    </shape>
+  </turtleShapes>
+  <linkShapes>
+    <shape name="default" curviness="0.0">
+      <lines>
+        <line x="-0.2" visible="false">
+          <dash value="0.0"></dash>
+          <dash value="1.0"></dash>
+        </line>
+        <line x="0.0" visible="true">
+          <dash value="1.0"></dash>
+          <dash value="0.0"></dash>
+        </line>
+        <line x="0.2" visible="false">
+          <dash value="0.0"></dash>
+          <dash value="1.0"></dash>
+        </line>
+      </lines>
+      <indicator>
+        <shape name="link direction" rotatable="true" editableColorIndex="0">
+          <line endX="90" startY="150" marked="true" color="-1920102913" endY="180" startX="150"></line>
+          <line endX="210" startY="150" marked="true" color="-1920102913" endY="180" startX="150"></line>
+        </shape>
+      </indicator>
+    </shape>
+  </linkShapes>
+  <previewCommands>setup
+repeat 50 [go]</previewCommands>
+  <experiments>
+    <experiment name="experiment" repetitions="20" sequentialRunOrder="true" runMetricsEveryStep="false" timeLimit="500">
+      <setup>setup</setup>
+      <go>go</go>
+      <metrics>
+        <metric>total-fish</metric>
+        <metric>total-fish / (count patches * max-fish-stock)</metric>
+        <metric>catch-per-tick</metric>
+        <metric>catch-per-fisher</metric>
+        <metric>count patches with [fish = 0]</metric>
+      </metrics>
+      <constants>
+        <steppedValueSet variable="number-of-fishers" first="0" step="10" last="100"></steppedValueSet>
+        <enumeratedValueSet variable="catch-rate">
+          <value value="0"></value>
+          <value value="0.05"></value>
+          <value value="0.1"></value>
+          <value value="0.15"></value>
+          <value value="0.2"></value>
+          <value value="0.3"></value>
+          <value value="0.5"></value>
+        </enumeratedValueSet>
+        <enumeratedValueSet variable="max-fish-stock">
+          <value value="60"></value>
+        </enumeratedValueSet>
+      </constants>
+    </experiment>
+  </experiments>
+</model>
