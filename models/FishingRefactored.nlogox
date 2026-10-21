@@ -44,6 +44,7 @@ end
 ; Відновлення запасу на клітинці
 to regrowth-fish
   ; Лінійний варіант: set fish fish + round (regrowth-rate * (max-fish-stock - fish))
+  ; set fish fish + round (regrowth-rate * (max-fish-stock - fish))
   set fish fish + round (regrowth-rate * fish * (1 - fish / max-fish-stock))
 end
 
