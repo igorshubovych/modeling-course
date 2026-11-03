@@ -1,6 +1,6 @@
 # Міні-курс з агентно-орієнтованого моделювання
 
-Навігація по курсу (ВСТАВИТИ ПОСИЛАННЯ)
+[Навігація по курсу](https://docs.google.com/document/d/10ZQXBXPCeJeGz26CkQAG39nWjqHuB-DG4ffMQCESvTE)
 
 
 ## Стандартні моделі
@@ -28,5 +28,4 @@ This site contains original and adapted NetLogo models.
 
 Copyright and licensing terms for each model are listed separately.
 
-See [Credits and licenses](./credits-and-licenses.html).
 See [Credits and licenses](./credits-and-licenses.html).
