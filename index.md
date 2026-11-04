@@ -21,6 +21,8 @@
   - [Модель вилова риби (рефакторінг)](./models/FishingRefactored.html)
   - [Модель вилова риби (рефакторінг + дифузія)](./models/FishingRefactored_Diffusion.html)
 - [Вовки та вівці (приклад біфуркації)](./models/WolfSheepBifurcation.html)
+  - [Вовки та вівці (біфуркація - фінал)](./models/WolfSheepBifurcationFinal.html)
+  - [Вовки та вівці (біфуркація - початкова точка)](./models/WolfSheepBifurcationFinal-StartingPoint.html)
 
 ## Credits and licenses
 
